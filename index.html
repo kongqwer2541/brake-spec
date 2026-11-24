@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>ระบบค้นหาสเปกผ้าเบรกและก้ามเบรกสำหรับเทียบโค้ง</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #f1f5f9; --bg-card: #ffffff; --navy-dark: #0f172a; --navy-main: #1e3a8a;
+      --blue-accent: #2563eb; --blue-soft: #eff6ff; --caliper-bg: #f8fafc;
+      --text-main: #0f172a; --text-muted: #475569; --border-color: #cbd5e1;
+      --green-bg: #dcfce7; --green-text: #166534; --green-border: #22c55e;
+      --amber-bg: #fef3c7; --amber-text: #92400e; --amber-border: #f59e0b;
+      --red-bg: #fee2e2; --red-text: #991b1b; --red-border: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Sarabun', sans-serif; background: var(--bg-page); color: var(--text-main); line-height: 1.5; padding-bottom: 48px; }
+
+    /* แถบส่วนหัวและช่องค้นหา */
+    .app-header { background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-main) 100%); color: #fff; padding: 16px 16px 20px; position: sticky; top: 0; z-index: 50; box-shadow: 0 4px 12px rgba(15,23,42,0.18); }
+    .header-inner, .main-container { max-width: 1200px; margin: 0 auto; }
+    .main-container { padding: 16px; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .brand-title { font-family: 'Prompt', sans-serif; font-size: 1.18rem; font-weight: 700; }
+    .brand-sub { font-size: 0.82rem; color: #cbd5e1; margin-top: 2px; }
+    .btn-sync { background: rgba(255,255,255,0.16); color: #fff; border: 1px solid rgba(255,255,255,0.35); border-radius: 10px; padding: 8px 14px; font-family: 'Prompt', sans-serif; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn-sync:hover { background: rgba(255,255,255,0.26); }
+    .btn-sync:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .search-box-wrap { position: relative; width: 100%; }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 1.15rem; }
+    .search-input { width: 100%; padding: 13px 46px 13px 44px; font-family: 'Sarabun', sans-serif; font-size: 1.03rem; font-weight: 500; border: 2px solid transparent; border-radius: 12px; background: #fff; color: var(--text-main); outline: none; box-shadow: 0 2px 8px rgba(0,0,0,0.14); }
+    .search-input:focus { border-color: #60a5fa; }
+    .btn-clear-search { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #e2e8f0; color: #334155; border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 0.9rem; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; }
+
+    /* ตัวกรองด่วน (Filter Chips) */
+    .filter-panel { background: var(--bg-card); border-radius: 14px; padding: 12px 14px; border: 1px solid #e2e8f0; margin-bottom: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .filter-row { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .filter-group-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); white-space: nowrap; min-width: 82px; }
+    .chip { border: 1px solid var(--border-color); background: #f8fafc; color: #334155; padding: 6px 13px; border-radius: 999px; font-family: 'Sarabun', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+    .chip.active { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); }
+    .chip-missing { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+    .chip-missing.active { background: #d97706; color: #fff; border-color: #d97706; }
+
+    .matched-stats-bar { display: none; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .stat-pill { background: #fff; border: 1px solid #cbd5e1; border-radius: 999px; padding: 4px 12px; font-size: 0.84rem; font-weight: 700; }
+    .result-meta-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; font-size: 0.9rem; color: var(--text-muted); }
+    .btn-reset-all { background: none; border: none; color: var(--blue-accent); font-weight: 700; font-size: 0.88rem; cursor: pointer; text-decoration: underline; }
+
+    /* การ์ดผลลัพธ์ 2 โซน */
+    .cards-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+    @media (min-width: 820px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
+    .spec-card { background: var(--bg-card); border-radius: 16px; border: 1px solid #cbd5e1; overflow: hidden; box-shadow: 0 3px 10px rgba(15,23,42,0.06); display: flex; flex-direction: column; }
+    .spec-card.card-cancelled { border: 2px solid var(--red-border); }
+
+    .zone-pad { padding: 16px; background: #fff; border-bottom: 2px dashed #cbd5e1; }
+    .zone-header-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+    .code-fg-badge { background: var(--navy-main); color: #fff; font-family: 'Prompt', sans-serif; font-size: 0.92rem; font-weight: 600; padding: 4px 10px; border-radius: 8px; }
+    .btn-copy-spec { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; padding: 5px 10px; font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .order-model-title { font-family: 'Prompt', sans-serif; font-size: 1.15rem; font-weight: 700; color: var(--navy-dark); margin-bottom: 4px; }
+    .name-fg-text { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; }
+    .size-pill { display: inline-block; background: var(--blue-soft); color: var(--navy-main); border: 1px solid #bfdbfe; border-radius: 8px; padding: 4px 10px; font-weight: 700; font-size: 0.92rem; margin-bottom: 12px; }
+
+    .drill-specs-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .drill-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px 4px; text-align: center; }
+    .drill-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 2px; }
+    .drill-val { font-family: 'Prompt', sans-serif; font-size: 1rem; font-weight: 700; color: var(--navy-dark); }
+
+    .zone-caliper { padding: 16px; background: var(--caliper-bg); flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .zone-caliper-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .zone-tag { font-size: 0.78rem; font-weight: 700; color: #475569; }
+
+    .status-badge { font-family: 'Prompt', sans-serif; font-size: 0.84rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; }
+    .status-active { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }
+    .status-pending { background: var(--amber-bg); color: var(--amber-text); border: 1px solid var(--amber-border); }
+    @keyframes blinkDanger { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(0.98); } }
+    .status-cancelled { background: #dc2626; color: #fff; border: 1px solid #991b1b; animation: blinkDanger 1s infinite ease-in-out; }
+    .status-unknown { background: #e2e8f0; color: #334155; }
+
+    .alert-banner { border-radius: 10px; padding: 8px 12px; font-size: 0.86rem; font-weight: 700; margin-bottom: 10px; }
+    .alert-pending { background: var(--amber-bg); color: var(--amber-text); border-left: 4px solid var(--amber-border); }
+    .alert-cancelled { background: var(--red-bg); color: var(--red-text); border-left: 4px solid var(--red-border); }
+
+    .caliper-code-hero { font-family: 'Prompt', sans-serif; font-size: 1.42rem; font-weight: 700; color: var(--blue-accent); line-height: 1.25; margin-bottom: 8px; }
+    .caliper-meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 12px; font-size: 0.9rem; margin-bottom: 14px; }
+    .meta-item strong { color: var(--text-muted); font-weight: 600; display: block; font-size: 0.78rem; }
+    .meta-item span { font-weight: 700; color: var(--text-main); }
+
+    .caliper-images-list { display: flex; flex-direction: column; gap: 10px; }
+    .caliper-preview-row { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 8px 10px; }
+    .thumb-box { width: 72px; height: 56px; border-radius: 8px; overflow: hidden; background: #f1f5f9; border: 1px solid #e2e8f0; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-missing { font-size: 0.72rem; color: #94a3b8; text-align: center; padding: 4px; font-weight: 600; }
+    .preview-info { flex: 1; min-width: 0; }
+    .preview-code-label { font-family: 'Prompt', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--navy-dark); }
+    .preview-sub-label { font-size: 0.78rem; color: var(--text-muted); }
+    .btn-view-img { background: var(--blue-accent); color: #fff; border: none; border-radius: 10px; padding: 9px 13px; font-family: 'Prompt', sans-serif; font-size: 0.85rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn-view-img.disabled { background: #e2e8f0; color: #64748b; cursor: not-allowed; }
+
+    .load-more-wrap { text-align: center; margin-top: 24px; }
+    .btn-load-more { background: var(--navy-main); color: #fff; border: none; border-radius: 12px; padding: 12px 28px; font-family: 'Prompt', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+    .state-box { background: #fff; border-radius: 16px; padding: 40px 20px; text-align: center; border: 1px dashed #cbd5e1; margin-top: 8px; }
+    .example-tags { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .example-btn { background: var(--blue-soft); color: var(--navy-main); border: 1px solid #bfdbfe; border-radius: 999px; padding: 6px 14px; font-size: 0.86rem; font-weight: 600; cursor: pointer; }
+    .spinner { width: 40px; height: 40px; border: 4px solid #cbd5e1; border-top-color: var(--blue-accent); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 14px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* หน้าต่างป๊อปอัปซูมดูรูปก้าม (Lightbox Modal) */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.92); z-index: 200; display: none; flex-direction: column; user-select: none; }
+    .modal-backdrop.open { display: flex; }
+    .modal-topbar { padding: 12px 16px; background: rgba(15,23,42,0.95); color: #fff; display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    .modal-caliper-code { font-family: 'Prompt', sans-serif; font-size: 1.08rem; font-weight: 700; color: #60a5fa; }
+    .modal-caliper-sub { font-size: 0.82rem; color: #cbd5e1; }
+    .btn-close-modal { background: rgba(255,255,255,0.15); color: #fff; border: none; width: 38px; height: 38px; border-radius: 50%; font-size: 1.2rem; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+    .modal-tabs { display: flex; gap: 8px; padding: 8px 16px; background: #1e293b; overflow-x: auto; }
+    .modal-tab-btn { background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 999px; font-family: 'Prompt', sans-serif; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+    .modal-tab-btn.active { background: var(--blue-accent); color: #fff; border-color: var(--blue-accent); }
+    .modal-stage { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; }
+    .modal-stage:active { cursor: grabbing; }
+    .modal-stage img { max-width: 92%; max-height: 85%; object-fit: contain; transition: transform 0.08s ease-out; transform-origin: center center; pointer-events: none; }
+    .modal-controls { padding: 12px 16px; background: rgba(15,23,42,0.95); border-top: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; }
+    .ctrl-btn { background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; padding: 8px 13px; font-family: 'Prompt', sans-serif; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    .toast-msg { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #0f172a; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 0.9rem; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.28); z-index: 300; display: none; text-align: center; max-width: 92vw; }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-top">
+        <div>
+          <div class="brand-title">⚙️ ระบบค้นหาสเปกผ้าเบรก & ก้ามเบรกเทียบโค้ง</div>
+          <div class="brand-sub" id="syncMetaText">พร้อมใช้งานทันที — พิมพ์คำค้นหาหรือเลือกตัวกรองเพื่อดึงข้อมูล</div>
+        </div>
+        <button type="button" class="btn-sync" id="btnForceSync" onclick="handleForceSyncClick()">🔄 ซิงค์ข้อมูล/รูปใหม่</button>
+      </div>
+      <div class="search-box-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="search" id="searchInput" class="search-input" placeholder="พิมพ์ค้นหา เช่น HINO BX, 125 384, COA06511, 001 (หยุดพิมพ์ 0.6 วิ ค้นหาให้อัตโนมัติ)" autocomplete="off">
+        <button type="button" class="btn-clear-search" id="btnClearSearch" onclick="clearSearchInput()" title="ล้างคำค้นหา">✕</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <section class="filter-panel">
+      <div class="filter-row">
+        <span class="filter-group-label">หน่วยงาน:</span>
+        <button type="button" class="chip active" data-dept="ALL" onclick="setDeptFilter('ALL')">ทั้งหมด</button>
+        <button type="button" class="chip" data-dept="ฝน-เจาะ" onclick="setDeptFilter('ฝน-เจาะ')">ฝน-เจาะ</button>
+        <button type="button" class="chip" data-dept="พิมพ์ร้อน" onclick="setDeptFilter('พิมพ์ร้อน')">พิมพ์ร้อน</button>
+      </div>
+      <div class="filter-row">
+        <span class="filter-group-label">ประเภทก้าม:</span>
+        <button type="button" class="chip active" data-type="ALL" onclick="setTypeFilter('ALL')">ทั้งหมด</button>
+        <button type="button" class="chip" data-type="แท้" onclick="setTypeFilter('แท้')">แท้</button>
+        <button type="button" class="chip" data-type="เทียบแท้" onclick="setTypeFilter('เทียบแท้')">เทียบแท้</button>
+        <button type="button" class="chip" data-type="ก้ามผ้าประกอบ" onclick="setTypeFilter('ก้ามผ้าประกอบ')">ก้ามผ้าประกอบ</button>
+      </div>
+      <div class="filter-row">
+        <span class="filter-group-label">สถานะก้าม:</span>
+        <button type="button" class="chip active" data-status="ALL" onclick="setStatusFilter('ALL')">ทั้งหมด</button>
+        <button type="button" class="chip" data-status="ใช้งาน" onclick="setStatusFilter('ใช้งาน')">✅ ใช้งาน</button>
+        <button type="button" class="chip" data-status="รอสอบเทียบ" onclick="setStatusFilter('รอสอบเทียบ')">⚠️ รอสอบเทียบ</button>
+        <button type="button" class="chip" data-status="ยกเลิกใช้งาน" onclick="setStatusFilter('ยกเลิกใช้งาน')">🚨 ยกเลิกใช้งาน</button>
+      </div>
+      <div class="filter-row">
+        <span class="filter-group-label">เช็กรูปภาพ:</span>
+        <button type="button" class="chip chip-missing" id="btnMissingPhoto" onclick="toggleMissingPhotoFilter()">🖼️ ดูเฉพาะรายการที่ยังไม่มีรูปก้ามใน Drive</button>
+      </div>
+    </section>
+
+    <div class="matched-stats-bar" id="matchedStatsBar"></div>
+
+    <div class="result-meta-bar">
+      <div id="resultCountText">ยังไม่ได้ระบุคำค้นหา</div>
+      <button type="button" class="btn-reset-all" onclick="resetAllFilters()">ล้างคำค้นหาและตัวกรอง</button>
+    </div>
+
+    <div id="statusContainer"></div>
+    <div id="cardsContainer" class="cards-grid"></div>
+
+    <div id="loadMoreWrap" class="load-more-wrap" style="display:none;">
+      <button type="button" class="btn-load-more" id="btnLoadMore" onclick="renderMoreCards()">แสดงรายการเพิ่มเติม</button>
+    </div>
+  </main>
+
+  <!-- หน้าต่างป๊อปอัปดูรูปขนาดใหญ่ (Lightbox Modal) -->
+  <div class="modal-backdrop" id="imageModal" role="dialog" aria-modal="true">
+    <div class="modal-topbar">
+      <div>
+        <div class="modal-caliper-code" id="modalCaliperTitle">-</div>
+        <div class="modal-caliper-sub" id="modalCaliperSub">-</div>
+      </div>
+      <button type="button" class="btn-close-modal" onclick="closeImageModal()" title="ปิดหน้าต่าง">✕</button>
+    </div>
+    <div class="modal-tabs" id="modalTabs" style="display:none;"></div>
+    <div class="modal-stage" id="modalStage">
+      <img id="modalImg" src="" alt="รูปก้ามเบรกสำหรับเทียบโค้ง">
+    </div>
+    <div class="modal-controls">
+      <button type="button" class="ctrl-btn" onclick="adjustZoom(0.4)">➕ ซูมเข้า</button>
+      <button type="button" class="ctrl-btn" onclick="adjustZoom(-0.4)">➖ ซูมออก</button>
+      <button type="button" class="ctrl-btn" onclick="rotateModalImage(-90)">↺ หมุนซ้าย 90°</button>
+      <button type="button" class="ctrl-btn" onclick="rotateModalImage(90)">↻ หมุนขวา 90°</button>
+      <button type="button" class="ctrl-btn" onclick="resetModalTransform()">รีเซ็ต 100%</button>
+    </div>
+  </div>
+
+  <div id="toastMsg" class="toast-msg"></div>
+
+  <script>
+    // ใส่ลิงก์ Web App URL เฉพาะกรณีนำไฟล์นี้ไปรันบน GitHub Pages (ถ้ารันบน GAS ปล่อยว่างไว้ได้เลย)
+    const EXTERNAL_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyKfVJnUdPQJfboPZJnzNgm6J_1J_xLXsFX48Cq7VvrRejOrml9cwo_DfuiT0Ibo4Kp/exec';
+    const DEBOUNCE_MS = 600;
+    const PAGE_SIZE = 30;
+
+    let currentItems = [];
+    let renderedCount = 0;
+    let debounceTimer = null;
+    let latestReqId = 0;
+
+    const filterState = { query: '', dept: 'ALL', type: 'ALL', status: 'ALL', onlyMissingPhoto: false };
+
+    let modalItemRef = null;
+    let modalCaliperIdx = 0;
+    let zoomLevel = 1, rotationDeg = 0, panX = 0, panY = 0;
+    let isDragging = false, dragStartX = 0, dragStartY = 0;
+
+    // เปิดหน้าเว็บพร้อมใช้งานทันทีโดยไม่ดึงข้อมูลล่วงหน้า
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchEl = document.getElementById('searchInput');
+
+      searchEl.addEventListener('input', function(e) {
+        filterState.query = e.target.value || '';
+        document.getElementById('btnClearSearch').style.display = filterState.query ? 'flex' : 'none';
+        scheduleDebouncedSearch();
+      });
+
+      searchEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          clearTimeout(debounceTimer);
+          if (filterState.query.trim().length >= 1 || hasActiveFilterChips()) {
+            executeSearch(false);
+          }
+        }
+      });
+
+      setupModalInteractions();
+      showIdleReadyState();
+    });
+
+    function escapeHtml(str) {
+      return String(str === null || str === undefined ? '' : str)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function hasActiveFilterChips() {
+      return filterState.dept !== 'ALL' || filterState.type !== 'ALL' || filterState.status !== 'ALL' || filterState.onlyMissingPhoto;
+    }
+
+    function showIdleReadyState() {
+      latestReqId++;
+      currentItems = [];
+      renderedCount = 0;
+      document.getElementById('cardsContainer').innerHTML = '';
+      document.getElementById('loadMoreWrap').style.display = 'none';
+      document.getElementById('matchedStatsBar').style.display = 'none';
+      document.getElementById('resultCountText').textContent = 'ยังไม่ได้ระบุคำค้นหา (ระบบยังไม่โหลดข้อมูลเพื่อความรวดเร็ว)';
+      document.getElementById('statusContainer').innerHTML =
+        '<div class="state-box">' +
+          '<div style="font-size:2.3rem; margin-bottom:8px;">⚡</div>' +
+          '<div style="font-family:\'Prompt\',sans-serif; font-weight:700; font-size:1.1rem; color:#0f172a;">พร้อมค้นหาสเปกผ้าเบรกและก้ามเบรก</div>' +
+          '<div style="color:#475569; font-size:0.92rem; margin-top:6px;">พิมพ์รหัสผลิต ชื่อรุ่น ขนาด หรือรหัสก้ามด้านบน (หยุดพิมพ์ 0.6 วินาที ระบบจะดึงข้อมูลให้อัตโนมัติ)</div>' +
+          '<div class="example-tags">' +
+            '<button type="button" class="example-btn" onclick="quickFillSearch(\'HINO\')">ลองค้น: HINO</button>' +
+            '<button type="button" class="example-btn" onclick="quickFillSearch(\'001\')">ลองค้น: 001</button>' +
+            '<button type="button" class="example-btn" onclick="setStatusFilter(\'รอสอบเทียบ\')">เช็กก้ามรอสอบเทียบ</button>' +
+          '</div>' +
+        '</div>';
+    }
+
+    function quickFillSearch(word) {
+      const input = document.getElementById('searchInput');
+      input.value = word;
+      filterState.query = word;
+      document.getElementById('btnClearSearch').style.display = 'flex';
+      clearTimeout(debounceTimer);
+      executeSearch(false);
+    }
+
+    function scheduleDebouncedSearch() {
+      clearTimeout(debounceTimer);
+      const q = filterState.query.trim();
+      const hasChips = hasActiveFilterChips();
+
+      if (!q && !hasChips) {
+        showIdleReadyState();
+        return;
+      }
+
+      if (q.length === 1 && !hasChips) {
+        latestReqId++;
+        document.getElementById('cardsContainer').innerHTML = '';
+        document.getElementById('loadMoreWrap').style.display = 'none';
+        document.getElementById('matchedStatsBar').style.display = 'none';
+        document.getElementById('resultCountText').textContent = 'กำลังรอพิมพ์คำค้นหาเพิ่ม...';
+        document.getElementById('statusContainer').innerHTML =
+          '<div class="state-box">' +
+            '<div style="font-size:1.8rem; margin-bottom:6px;">⌨️</div>' +
+            '<div style="font-weight:700;">กรุณาพิมพ์อย่างน้อย 2 ตัวอักษรเพื่อค้นหาอัตโนมัติ</div>' +
+            '<div style="color:#64748b; font-size:0.88rem; margin-top:4px;">(หรือกดปุ่ม Enter บนคีย์บอร์ดหากต้องการค้นหาทันที)</div>' +
+          '</div>';
+        return;
+      }
+
+      document.getElementById('resultCountText').textContent = '⏳ กำลังเตรียมค้นหา...';
+      debounceTimer = setTimeout(function() { executeSearch(false); }, DEBOUNCE_MS);
+    }
+
+    function executeSearch(forceRefresh) {
+      const reqId = ++latestReqId;
+      const syncBtn = document.getElementById('btnForceSync');
+
+      if (forceRefresh) {
+        syncBtn.disabled = true;
+        syncBtn.textContent = '⏳ กำลังซิงค์...';
+      }
+
+      document.getElementById('cardsContainer').innerHTML = '';
+      document.getElementById('loadMoreWrap').style.display = 'none';
+      document.getElementById('matchedStatsBar').style.display = 'none';
+      document.getElementById('resultCountText').textContent = 'กำลังค้นหาข้อมูล...';
+      document.getElementById('statusContainer').innerHTML =
+        '<div class="state-box"><div class="spinner"></div><div style="font-weight:700;">กำลังค้นหาสเปกที่ตรงกับเงื่อนไข...</div></div>';
+
+      const payload = {
+        query: filterState.query.trim(),
+        dept: filterState.dept,
+        type: filterState.type,
+        status: filterState.status,
+        onlyMissingPhoto: filterState.onlyMissingPhoto,
+        forceRefresh: Boolean(forceRefresh)
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (reqId !== latestReqId) return;
+            handleSearchResponse(res, forceRefresh);
+          })
+          .withFailureHandler(function(err) {
+            if (reqId !== latestReqId) return;
+            handleSearchError(err.message || 'ไม่สามารถติดต่อเซิร์ฟเวอร์ Google Apps Script ได้');
+          })
+          .searchSpecData(payload);
+        return;
+      }
+
+      if (!EXTERNAL_GAS_API_URL) {
+        handleSearchError('หากรันนอก Google Apps Script กรุณาใส่ลิงก์ Web App URL ในตัวแปร EXTERNAL_GAS_API_URL');
+        return;
+      }
+
+      const sep = EXTERNAL_GAS_API_URL.indexOf('?') >= 0 ? '&' : '?';
+      const url = EXTERNAL_GAS_API_URL + sep + 'action=api' +
+        '&q=' + encodeURIComponent(payload.query) +
+        '&dept=' + encodeURIComponent(payload.dept) +
+        '&type=' + encodeURIComponent(payload.type) +
+        '&status=' + encodeURIComponent(payload.status) +
+        (payload.onlyMissingPhoto ? '&missing=1' : '') +
+        (payload.forceRefresh ? '&refresh=1' : '');
+
+      fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(res) { if (reqId === latestReqId) handleSearchResponse(res, forceRefresh); })
+        .catch(function(err) { if (reqId === latestReqId) handleSearchError(err.message || 'เชื่อมต่อ JSON API ไม่สำเร็จ'); });
+    }
+
+    function handleForceSyncClick() {
+      clearTimeout(debounceTimer);
+      if (filterState.query.trim().length >= 1 || hasActiveFilterChips()) {
+        executeSearch(true);
+        return;
+      }
+
+      const syncBtn = document.getElementById('btnForceSync');
+      syncBtn.disabled = true;
+      syncBtn.textContent = '⏳ กำลังซิงค์รูป...';
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            syncBtn.disabled = false;
+            syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
+            if (res && res.ok && res.meta) {
+              document.getElementById('syncMetaText').textContent = 'ซิงค์ล่าสุด: ' + res.meta.updatedAt + ' | รูปใน Drive: ' + res.meta.totalImagesInDrive + ' ไฟล์';
+              showToast(res.meta.cooldownNotice || ('✅ ซิงค์รูปใน Drive เรียบร้อย (' + res.meta.totalImagesInDrive + ' รูป)'));
+            } else {
+              showToast('⚠️ ' + ((res && res.message) || 'ซิงค์ไม่สำเร็จ'));
+            }
+          })
+          .withFailureHandler(function(err) {
+            syncBtn.disabled = false;
+            syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
+            showToast('⚠️ ' + (err.message || 'ซิงค์ไม่สำเร็จ'));
+          })
+          .syncImageCacheOnly();
+        return;
+      }
+
+      if (!EXTERNAL_GAS_API_URL) {
+        syncBtn.disabled = false;
+        syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
+        showToast('กรุณาตั้งค่า EXTERNAL_GAS_API_URL ก่อนใช้งานนอก GAS');
+        return;
+      }
+
+      const sep = EXTERNAL_GAS_API_URL.indexOf('?') >= 0 ? '&' : '?';
+      fetch(EXTERNAL_GAS_API_URL + sep + 'action=sync')
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          syncBtn.disabled = false;
+          syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
+          if (res && res.ok && res.meta) showToast(res.meta.cooldownNotice || ('✅ ซิงค์รูปเรียบร้อย (' + res.meta.totalImagesInDrive + ' รูป)'));
+        })
+        .catch(function() {
+          syncBtn.disabled = false;
+          syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
+          showToast('⚠️ เชื่อมต่อเพื่อซิงค์ไม่สำเร็จ');
+        });
+    }
+
+    function handleSearchResponse(res, wasForceRefresh) {
+      const syncBtn = document.getElementById('btnForceSync');
+      syncBtn.disabled = false;
+      syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
+
+      if (!res || !res.ok) {
+        handleSearchError((res && res.message) ? res.message : 'ไม่พบข้อมูลตอบกลับจากระบบ');
+        return;
+      }
+      if (res.idle) {
+        showIdleReadyState();
+        return;
+      }
+
+      currentItems = (res.items || []).map(function(item, idx) { return Object.assign({ _idx: idx }, item); });
+      const meta = res.meta || {};
+      if (meta.updatedAt) {
+        const imgInfo = meta.totalImagesInDrive !== undefined ? ' | รูปใน Drive: ' + meta.totalImagesInDrive + ' ไฟล์' : '';
+        document.getElementById('syncMetaText').textContent = 'ค้นหาล่าสุด: ' + meta.updatedAt + imgInfo;
+      }
+
+      const totalMatched = meta.totalMatched || 0;
+      const truncatedNote = meta.isTruncated ? ' (แสดง 300 รายการแรก กรุณาพิมพ์คำค้นเพิ่มเพื่อเจาะจง)' : '';
+      document.getElementById('resultCountText').innerHTML = 'พบผลลัพธ์ตรงเงื่อนไข <strong>' + totalMatched.toLocaleString() + '</strong> รายการ' + truncatedNote;
+
+      const st = res.stats || { active: 0, pending: 0, cancelled: 0, missingImg: 0 };
+      const statsBar = document.getElementById('matchedStatsBar');
+      if (totalMatched > 0) {
+        statsBar.style.display = 'flex';
+        statsBar.innerHTML =
+          '<span class="stat-pill" style="color:#166534; background:#f0fdf4; border-color:#bbf7d0;">✅ ใช้งาน: ' + st.active + '</span>' +
+          '<span class="stat-pill" style="color:#92400e; background:#fffbeb; border-color:#fde68a;">⚠️ รอสอบเทียบ: ' + st.pending + '</span>' +
+          '<span class="stat-pill" style="color:#991b1b; background:#fef2f2; border-color:#fecaca;">🚨 ยกเลิก: ' + st.cancelled + '</span>' +
+          '<span class="stat-pill" style="color:#475569;">🖼️ ขาดรูป: ' + st.missingImg + '</span>';
+      } else {
+        statsBar.style.display = 'none';
+      }
+
+      if (wasForceRefresh) showToast(meta.cooldownNotice || '✅ ซิงค์ข้อมูลและรูปภาพล่าสุดเรียบร้อยแล้ว');
+
+      renderedCount = 0;
+      document.getElementById('cardsContainer').innerHTML = '';
+
+      if (currentItems.length === 0) {
+        document.getElementById('statusContainer').innerHTML =
+          '<div class="state-box"><div style="font-size:2rem; margin-bottom:8px;">🔎</div>' +
+          '<div style="font-weight:700; font-size:1.05rem;">ไม่พบรายการสเปกที่ตรงกับคำค้นหานี้</div>' +
+          '<div style="color:#64748b; font-size:0.9rem; margin-top:4px;">ลองตรวจสอบตัวสะกด หรือกดปุ่ม "ล้างคำค้นหาและตัวกรอง"</div></div>';
+        document.getElementById('loadMoreWrap').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('statusContainer').innerHTML = '';
+      renderMoreCards();
+    }
+
+    function handleSearchError(msg) {
+      const syncBtn = document.getElementById('btnForceSync');
+      syncBtn.disabled = false;
+      syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
+      document.getElementById('statusContainer').innerHTML =
+        '<div class="state-box" style="border-color:#ef4444;"><div style="font-size:2rem; margin-bottom:8px;">⚠️</div>' +
+        '<div style="font-weight:700; color:#991b1b;">ค้นหาข้อมูลไม่สำเร็จ</div>' +
+        '<div style="color:#475569; margin-top:6px;">' + escapeHtml(msg) + '</div></div>';
+    }
+
+    function triggerAfterChipChange() {
+      clearTimeout(debounceTimer);
+      if (!filterState.query.trim() && !hasActiveFilterChips()) showIdleReadyState();
+      else executeSearch(false);
+    }
+
+    function setDeptFilter(val) {
+      filterState.dept = val;
+      document.querySelectorAll('[data-dept]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-dept') === val); });
+      triggerAfterChipChange();
+    }
+
+    function setTypeFilter(val) {
+      filterState.type = val;
+      document.querySelectorAll('[data-type]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-type') === val); });
+      triggerAfterChipChange();
+    }
+
+    function setStatusFilter(val) {
+      filterState.status = val;
+      document.querySelectorAll('[data-status]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-status') === val); });
+      triggerAfterChipChange();
+    }
+
+    function toggleMissingPhotoFilter() {
+      filterState.onlyMissingPhoto = !filterState.onlyMissingPhoto;
+      document.getElementById('btnMissingPhoto').classList.toggle('active', filterState.onlyMissingPhoto);
+      triggerAfterChipChange();
+    }
+
+    function clearSearchInput() {
+      clearTimeout(debounceTimer);
+      const input = document.getElementById('searchInput');
+      input.value = '';
+      filterState.query = '';
+      document.getElementById('btnClearSearch').style.display = 'none';
+      input.focus();
+      triggerAfterChipChange();
+    }
+
+    function resetAllFilters() {
+      clearTimeout(debounceTimer);
+      document.getElementById('searchInput').value = '';
+      document.getElementById('btnClearSearch').style.display = 'none';
+      filterState.query = '';
+      filterState.dept = 'ALL';
+      filterState.type = 'ALL';
+      filterState.status = 'ALL';
+      filterState.onlyMissingPhoto = false;
+      document.getElementById('btnMissingPhoto').classList.remove('active');
+      document.querySelectorAll('[data-dept]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-dept') === 'ALL'); });
+      document.querySelectorAll('[data-type]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-type') === 'ALL'); });
+      document.querySelectorAll('[data-status]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-status') === 'ALL'); });
+      showIdleReadyState();
+    }
+
+    function renderMoreCards() {
+      const container = document.getElementById('cardsContainer');
+      const nextSlice = currentItems.slice(renderedCount, renderedCount + PAGE_SIZE);
+      let htmlBatch = '';
+      for (let i = 0; i < nextSlice.length; i++) htmlBatch += buildCardHtml(nextSlice[i]);
+      container.insertAdjacentHTML('beforeend', htmlBatch);
+      renderedCount += nextSlice.length;
+
+      const remaining = currentItems.length - renderedCount;
+      const loadMoreWrap = document.getElementById('loadMoreWrap');
+      if (remaining > 0) {
+        loadMoreWrap.style.display = 'block';
+        document.getElementById('btnLoadMore').textContent = 'แสดงเพิ่มเติมอีก ' + Math.min(PAGE_SIZE, remaining) + ' รายการ (เหลือ ' + remaining.toLocaleString() + ' รายการ)';
+      } else {
+        loadMoreWrap.style.display = 'none';
+      }
+    }
+
+    function buildCardHtml(item) {
+      const st = item.caliperStatus;
+      let badgeHtml = '', alertBannerHtml = '', cardExtraClass = '';
+
+      if (st === 'ใช้งาน') {
+        badgeHtml = '<span class="status-badge status-active">✅ ใช้งาน</span>';
+      } else if (st === 'รอสอบเทียบ') {
+        badgeHtml = '<span class="status-badge status-pending">⚠️ รอสอบเทียบ</span>';
+        alertBannerHtml = '<div class="alert-banner alert-pending">⚠️ คำเตือน: ก้ามเบรกนี้อยู่ระหว่างรอสอบเทียบ โปรดตรวจสอบความถูกต้องก่อนใช้งาน</div>';
+      } else if (st === 'ยกเลิกใช้งาน') {
+        badgeHtml = '<span class="status-badge status-cancelled">🚨 ยกเลิกใช้งาน</span>';
+        alertBannerHtml = '<div class="alert-banner alert-cancelled">⛔ ห้ามนำมาใช้งานเด็ดขาด! ก้ามเบรกนี้ถูกยกเลิกการใช้งานแล้ว</div>';
+        cardExtraClass = ' card-cancelled';
+      } else {
+        badgeHtml = '<span class="status-badge status-unknown">' + escapeHtml(st) + '</span>';
+      }
+
+      let calipersHtml = '';
+      if (!item.calipers || item.calipers.length === 0) {
+        calipersHtml = '<div class="caliper-preview-row"><div class="preview-info"><div class="preview-sub-label">ไม่มีรหัสก้ามเบรกสำหรับรายการนี้</div></div></div>';
+      } else {
+        for (let c = 0; c < item.calipers.length; c++) {
+          const cal = item.calipers[c];
+          if (cal.hasImage) {
+            calipersHtml +=
+              '<div class="caliper-preview-row">' +
+                '<div class="thumb-box" onclick="openImageModal(' + item._idx + ', ' + c + ')">' +
+                  '<img src="' + escapeHtml(cal.imageUrl) + '" data-backup="' + escapeHtml(cal.backupUrl) + '" alt="' + escapeHtml(cal.code) + '" loading="lazy" onerror="handleImgFallback(this)">' +
+                '</div>' +
+                '<div class="preview-info">' +
+                  '<div class="preview-code-label">ก้าม: ' + escapeHtml(cal.code) + '</div>' +
+                  '<div class="preview-sub-label">ไฟล์รูป #' + escapeHtml(cal.shortKey) + ' พร้อมแสดงผล</div>' +
+                '</div>' +
+                '<button type="button" class="btn-view-img" onclick="openImageModal(' + item._idx + ', ' + c + ')">🔍 กดดูรูปก้าม</button>' +
+              '</div>';
+          } else {
+            calipersHtml +=
+              '<div class="caliper-preview-row">' +
+                '<div class="thumb-box"><div class="thumb-missing">ไม่มีรูป</div></div>' +
+                '<div class="preview-info">' +
+                  '<div class="preview-code-label">ก้าม: ' + escapeHtml(cal.code) + '</div>' +
+                  '<div class="preview-sub-label" style="color:#b45309;">ยังไม่มีไฟล์ ' + escapeHtml(cal.shortKey) + '.png/.jpg ใน Drive</div>' +
+                '</div>' +
+                '<button type="button" class="btn-view-img disabled" disabled>ไม่มีรูปก้าม</button>' +
+              '</div>';
+          }
+        }
+      }
+
+      return (
+        '<article class="spec-card' + cardExtraClass + '">' +
+          '<div class="zone-pad">' +
+            '<div class="zone-header-bar">' +
+              '<span class="code-fg-badge">' + escapeHtml(item.codeFG) + '</span>' +
+              '<button type="button" class="btn-copy-spec" onclick="copySpecText(' + item._idx + ')">📋 คัดลอกสเปก</button>' +
+            '</div>' +
+            '<div class="order-model-title">' + escapeHtml(item.orderModel) + '</div>' +
+            '<div class="name-fg-text">' + escapeHtml(item.nameFG) + '</div>' +
+            '<div class="size-pill">📏 ขนาด: ' + escapeHtml(item.size) + '</div>' +
+            '<div class="drill-specs-grid">' +
+              '<div class="drill-box"><span class="drill-label">เกรด</span><span class="drill-val">' + escapeHtml(item.grade) + '</span></div>' +
+              '<div class="drill-box"><span class="drill-label">จำนวนรู</span><span class="drill-val">' + escapeHtml(item.holeCount) + '</span></div>' +
+              '<div class="drill-box"><span class="drill-label">No.ดอกเจาะ</span><span class="drill-val">' + escapeHtml(item.drillBitNo) + '</span></div>' +
+              '<div class="drill-box"><span class="drill-label">No.ดอกคว้าน</span><span class="drill-val">' + escapeHtml(item.countersinkNo) + '</span></div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="zone-caliper">' +
+            '<div>' +
+              '<div class="zone-caliper-top">' +
+                '<span class="zone-tag">🛠️ ก้ามเบรกสำหรับเทียบโค้ง</span>' +
+                badgeHtml +
+              '</div>' +
+              alertBannerHtml +
+              '<div class="caliper-code-hero">' + escapeHtml(item.caliperCodeRaw) + '</div>' +
+              '<div class="caliper-meta-grid">' +
+                '<div class="meta-item"><strong>ชื่อรุ่นก้าม</strong><span>' + escapeHtml(item.caliperModel) + '</span></div>' +
+                '<div class="meta-item"><strong>รัศมีโค้งก้าม</strong><span>' + escapeHtml(item.caliperRadius) + '</span></div>' +
+                '<div class="meta-item"><strong>ช่วงการวัด</strong><span>' + escapeHtml(item.measureRange) + '</span></div>' +
+                '<div class="meta-item"><strong>ประเภทก้าม</strong><span>' + escapeHtml(item.caliperType) + '</span></div>' +
+                '<div class="meta-item"><strong>หน่วยงาน</strong><span>' + escapeHtml(item.department) + '</span></div>' +
+                '<div class="meta-item"><strong>ผู้ผลิต</strong><span>' + escapeHtml(item.manufacturer) + '</span></div>' +
+              '</div>' +
+            '</div>' +
+            '<div class="caliper-images-list">' + calipersHtml + '</div>' +
+          '</div>' +
+        '</article>'
+      );
+    }
+
+    function handleImgFallback(imgEl) {
+      const backup = imgEl.getAttribute('data-backup');
+      if (backup && imgEl.src !== backup) {
+        imgEl.src = backup;
+        return;
+      }
+      imgEl.onerror = null;
+      if (imgEl.parentElement && imgEl.parentElement.classList.contains('thumb-box')) {
+        imgEl.parentElement.innerHTML = '<div class="thumb-missing">โหลดไม่ขึ้น</div>';
+      }
+    }
+
+    function copySpecText(itemIdx) {
+      const item = currentItems[itemIdx];
+      if (!item) return;
+
+      const text = [
+        '🔧 [สเปกผ้าเบรก & ก้ามเทียบโค้ง]',
+        '• Code_FG: ' + item.codeFG,
+        '• รุ่นใบสั่งฝนเจาะ: ' + item.orderModel,
+        '• รายละเอียด: ' + item.nameFG,
+        '• ขนาด: ' + item.size,
+        '• สเปกเจาะ: เกรด ' + item.grade + ' | ' + item.holeCount + ' รู | ดอกเจาะ ' + item.drillBitNo + ' | ดอกคว้าน ' + item.countersinkNo,
+        '--------------------',
+        '• รหัสก้าม: ' + item.caliperCodeRaw + ' (' + item.caliperStatus + ')',
+        '• รุ่นก้าม: ' + item.caliperModel + ' | รัศมีโค้ง: ' + item.caliperRadius,
+        '• ช่วงการวัด: ' + item.measureRange,
+        '• ประเภท: ' + item.caliperType + ' | หน่วยงาน: ' + item.department
+      ].join('\n');
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+          .then(function() { showToast('📋 คัดลอกสเปกพร้อมวางส่งใน LINE แล้ว!'); })
+          .catch(function() { fallbackCopyText(text); });
+      } else {
+        fallbackCopyText(text);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('📋 คัดลอกสเปกพร้อมวางส่งใน LINE แล้ว!');
+      } catch (e) {
+        showToast('ไม่สามารถคัดลอกอัตโนมัติได้');
+      }
+      document.body.removeChild(ta);
+    }
+
+    function openImageModal(itemIdx, caliperIdx) {
+      const item = currentItems[itemIdx];
+      if (!item || !item.calipers || !item.calipers[caliperIdx]) return;
+
+      modalItemRef = item;
+      modalCaliperIdx = caliperIdx;
+
+      const tabsEl = document.getElementById('modalTabs');
+      if (item.calipers.length > 1) {
+        let tabsHtml = '';
+        for (let i = 0; i < item.calipers.length; i++) {
+          const cal = item.calipers[i];
+          if (!cal.hasImage) continue;
+          const activeCls = i === caliperIdx ? ' active' : '';
+          tabsHtml += '<button type="button" class="modal-tab-btn' + activeCls + '" onclick="switchModalCaliper(' + i + ')">ก้ามที่ ' + (i + 1) + ': ' + escapeHtml(cal.code) + '</button>';
+        }
+        tabsEl.innerHTML = tabsHtml;
+        tabsEl.style.display = 'flex';
+      } else {
+        tabsEl.style.display = 'none';
+      }
+
+      loadCurrentModalImage();
+      document.getElementById('imageModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function switchModalCaliper(caliperIdx) {
+      modalCaliperIdx = caliperIdx;
+      document.querySelectorAll('.modal-tab-btn').forEach(function(btn, idx) {
+        btn.classList.toggle('active', idx === caliperIdx);
+      });
+      loadCurrentModalImage();
+    }
+
+    function loadCurrentModalImage() {
+      const cal = modalItemRef.calipers[modalCaliperIdx];
+      const imgEl = document.getElementById('modalImg');
+
+      document.getElementById('modalCaliperTitle').textContent = 'รหัสก้าม: ' + cal.code + ' (' + modalItemRef.caliperStatus + ')';
+      document.getElementById('modalCaliperSub').textContent = modalItemRef.caliperModel + ' | รัศมีโค้ง: ' + modalItemRef.caliperRadius + ' | ช่วงวัด: ' + modalItemRef.measureRange;
+
+      resetModalTransform();
+      imgEl.setAttribute('data-backup', cal.backupUrl);
+      imgEl.onerror = function() { handleImgFallback(imgEl); };
+      imgEl.src = cal.imageUrl;
+    }
+
+    function closeImageModal() {
+      document.getElementById('imageModal').classList.remove('open');
+      document.getElementById('modalImg').src = '';
+      document.body.style.overflow = '';
+    }
+
+    function adjustZoom(delta) {
+      zoomLevel = Math.min(5, Math.max(0.5, +(zoomLevel + delta).toFixed(2)));
+      if (zoomLevel === 1) { panX = 0; panY = 0; }
+      applyModalTransform();
+    }
+
+    function rotateModalImage(degDelta) {
+      rotationDeg = (rotationDeg + degDelta) % 360;
+      applyModalTransform();
+    }
+
+    function resetModalTransform() {
+      zoomLevel = 1; rotationDeg = 0; panX = 0; panY = 0;
+      applyModalTransform();
+    }
+
+    function applyModalTransform() {
+      document.getElementById('modalImg').style.transform =
+        'translate(' + panX + 'px, ' + panY + 'px) scale(' + zoomLevel + ') rotate(' + rotationDeg + 'deg)';
+    }
+
+    function setupModalInteractions() {
+      const stage = document.getElementById('modalStage');
+
+      stage.addEventListener('pointerdown', function(e) {
+        isDragging = true;
+        dragStartX = e.clientX - panX;
+        dragStartY = e.clientY - panY;
+        stage.setPointerCapture(e.pointerId);
+      });
+
+      stage.addEventListener('pointermove', function(e) {
+        if (!isDragging) return;
+        panX = e.clientX - dragStartX;
+        panY = e.clientY - dragStartY;
+        applyModalTransform();
+      });
+
+      stage.addEventListener('pointerup', function() { isDragging = false; });
+      stage.addEventListener('pointercancel', function() { isDragging = false; });
+
+      stage.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        adjustZoom(e.deltaY < 0 ? 0.25 : -0.25);
+      }, { passive: false });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeImageModal();
+      });
+    }
+
+    function showToast(message) {
+      const el = document.getElementById('toastMsg');
+      el.textContent = message;
+      el.style.display = 'block';
+      clearTimeout(el._timer);
+      el._timer = setTimeout(function() { el.style.display = 'none'; }, 3200);
+    }
+  </script>
+</body>
+</html>
