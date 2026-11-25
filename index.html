@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>ระบบค้นหาสเปกผ้าเบรกและก้ามเบรกสำหรับเทียบโค้ง</title>
+  <!-- ฟอนต์ภาษาไทย Open Source (SIL Open Font License - ฟรี 100%) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,9 +13,7 @@
       --bg-page: #f1f5f9; --bg-card: #ffffff; --navy-dark: #0f172a; --navy-main: #1e3a8a;
       --blue-accent: #2563eb; --blue-soft: #eff6ff; --caliper-bg: #f8fafc;
       --text-main: #0f172a; --text-muted: #475569; --border-color: #cbd5e1;
-      --green-bg: #dcfce7; --green-text: #166534; --green-border: #22c55e;
-      --amber-bg: #fef3c7; --amber-text: #92400e; --amber-border: #f59e0b;
-      --red-bg: #fee2e2; --red-text: #991b1b; --red-border: #ef4444;
+      --indigo-bg: #e0e7ff; --indigo-text: #3730a3; --indigo-border: #6366f1;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Sarabun', sans-serif; background: var(--bg-page); color: var(--text-main); line-height: 1.5; padding-bottom: 48px; }
@@ -55,7 +54,6 @@
     .cards-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
     @media (min-width: 820px) { .cards-grid { grid-template-columns: repeat(2, 1fr); } }
     .spec-card { background: var(--bg-card); border-radius: 16px; border: 1px solid #cbd5e1; overflow: hidden; box-shadow: 0 3px 10px rgba(15,23,42,0.06); display: flex; flex-direction: column; }
-    .spec-card.card-cancelled { border: 2px solid var(--red-border); }
 
     .zone-pad { padding: 16px; background: #fff; border-bottom: 2px dashed #cbd5e1; }
     .zone-header-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
@@ -71,19 +69,12 @@
     .drill-val { font-family: 'Prompt', sans-serif; font-size: 1rem; font-weight: 700; color: var(--navy-dark); }
 
     .zone-caliper { padding: 16px; background: var(--caliper-bg); flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-    .zone-caliper-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .zone-caliper-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
     .zone-tag { font-size: 0.78rem; font-weight: 700; color: #475569; }
 
-    .status-badge { font-family: 'Prompt', sans-serif; font-size: 0.84rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; }
-    .status-active { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); }
-    .status-pending { background: var(--amber-bg); color: var(--amber-text); border: 1px solid var(--amber-border); }
-    @keyframes blinkDanger { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.55; transform: scale(0.98); } }
-    .status-cancelled { background: #dc2626; color: #fff; border: 1px solid #991b1b; animation: blinkDanger 1s infinite ease-in-out; }
-    .status-unknown { background: #e2e8f0; color: #334155; }
-
-    .alert-banner { border-radius: 10px; padding: 8px 12px; font-size: 0.86rem; font-weight: 700; margin-bottom: 10px; }
-    .alert-pending { background: var(--amber-bg); color: var(--amber-text); border-left: 4px solid var(--amber-border); }
-    .alert-cancelled { background: var(--red-bg); color: var(--red-text); border-left: 4px solid var(--red-border); }
+    /* ป้ายแจ้งเตือนกรณีมีการแทนรหัสก้ามใหม่ */
+    .replaced-badge { font-family: 'Prompt', sans-serif; font-size: 0.8rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--indigo-bg); color: var(--indigo-text); border: 1px solid var(--indigo-border); }
+    .replace-notice-box { background: #eef2ff; color: var(--indigo-text); border-left: 4px solid var(--indigo-border); border-radius: 8px; padding: 8px 12px; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; }
 
     .caliper-code-hero { font-family: 'Prompt', sans-serif; font-size: 1.42rem; font-weight: 700; color: var(--blue-accent); line-height: 1.25; margin-bottom: 8px; }
     .caliper-meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 12px; font-size: 0.9rem; margin-bottom: 14px; }
@@ -134,13 +125,13 @@
       <div class="header-top">
         <div>
           <div class="brand-title">⚙️ ระบบค้นหาสเปกผ้าเบรก & ก้ามเบรกเทียบโค้ง</div>
-          <div class="brand-sub" id="syncMetaText">พร้อมใช้งานทันที — พิมพ์คำค้นหาหรือเลือกตัวกรองเพื่อดึงข้อมูล</div>
+          <div class="brand-sub" id="syncMetaText">พร้อมใช้งานทันที — ค้นหาด้วย Code_FG, รุ่นใบสั่งฝนเจาะ หรือ รหัสก้าม</div>
         </div>
         <button type="button" class="btn-sync" id="btnForceSync" onclick="handleForceSyncClick()">🔄 ซิงค์ข้อมูล/รูปใหม่</button>
       </div>
       <div class="search-box-wrap">
         <span class="search-icon">🔍</span>
-        <input type="search" id="searchInput" class="search-input" placeholder="พิมพ์ค้นหา เช่น HINO BX, 125 384, COA06511, 001 (หยุดพิมพ์ 0.6 วิ ค้นหาให้อัตโนมัติ)" autocomplete="off">
+        <input type="search" id="searchInput" class="search-input" placeholder="พิมพ์ Code_FG, ชื่อรุ่นใบสั่งฝนเจาะ หรือ รหัสก้าม เช่น COA06511, HINO BX, 001" autocomplete="off">
         <button type="button" class="btn-clear-search" id="btnClearSearch" onclick="clearSearchInput()" title="ล้างคำค้นหา">✕</button>
       </div>
     </div>
@@ -160,13 +151,6 @@
         <button type="button" class="chip" data-type="แท้" onclick="setTypeFilter('แท้')">แท้</button>
         <button type="button" class="chip" data-type="เทียบแท้" onclick="setTypeFilter('เทียบแท้')">เทียบแท้</button>
         <button type="button" class="chip" data-type="ก้ามผ้าประกอบ" onclick="setTypeFilter('ก้ามผ้าประกอบ')">ก้ามผ้าประกอบ</button>
-      </div>
-      <div class="filter-row">
-        <span class="filter-group-label">สถานะก้าม:</span>
-        <button type="button" class="chip active" data-status="ALL" onclick="setStatusFilter('ALL')">ทั้งหมด</button>
-        <button type="button" class="chip" data-status="ใช้งาน" onclick="setStatusFilter('ใช้งาน')">✅ ใช้งาน</button>
-        <button type="button" class="chip" data-status="รอสอบเทียบ" onclick="setStatusFilter('รอสอบเทียบ')">⚠️ รอสอบเทียบ</button>
-        <button type="button" class="chip" data-status="ยกเลิกใช้งาน" onclick="setStatusFilter('ยกเลิกใช้งาน')">🚨 ยกเลิกใช้งาน</button>
       </div>
       <div class="filter-row">
         <span class="filter-group-label">เช็กรูปภาพ:</span>
@@ -214,7 +198,7 @@
   <div id="toastMsg" class="toast-msg"></div>
 
   <script>
-    // ใส่ลิงก์ Web App URL เฉพาะกรณีนำไฟล์นี้ไปรันบน GitHub Pages (ถ้ารันบน GAS ปล่อยว่างไว้ได้เลย)
+    // ลิงก์ Web App URL (/exec) เชื่อมต่อกับ Google Apps Script พร้อมใช้งานบน GitHub Pages
     const EXTERNAL_GAS_API_URL = 'https://script.google.com/macros/s/AKfycbyKfVJnUdPQJfboPZJnzNgm6J_1J_xLXsFX48Cq7VvrRejOrml9cwo_DfuiT0Ibo4Kp/exec';
     const DEBOUNCE_MS = 600;
     const PAGE_SIZE = 30;
@@ -224,14 +208,13 @@
     let debounceTimer = null;
     let latestReqId = 0;
 
-    const filterState = { query: '', dept: 'ALL', type: 'ALL', status: 'ALL', onlyMissingPhoto: false };
+    const filterState = { query: '', dept: 'ALL', type: 'ALL', onlyMissingPhoto: false };
 
     let modalItemRef = null;
     let modalCaliperIdx = 0;
     let zoomLevel = 1, rotationDeg = 0, panX = 0, panY = 0;
     let isDragging = false, dragStartX = 0, dragStartY = 0;
 
-    // เปิดหน้าเว็บพร้อมใช้งานทันทีโดยไม่ดึงข้อมูลล่วงหน้า
     document.addEventListener('DOMContentLoaded', function() {
       const searchEl = document.getElementById('searchInput');
 
@@ -262,7 +245,34 @@
     }
 
     function hasActiveFilterChips() {
-      return filterState.dept !== 'ALL' || filterState.type !== 'ALL' || filterState.status !== 'ALL' || filterState.onlyMissingPhoto;
+      return filterState.dept !== 'ALL' || filterState.type !== 'ALL' || filterState.onlyMissingPhoto;
+    }
+
+    /**
+     * ฟังก์ชันดึงข้อมูลจาก Google Apps Script สำหรับ GitHub Pages แบบเสถียรพิเศษ
+     * ป้องกันปัญหา Redirect / CORS และแจ้งเตือนชัดเจนหากตั้งสิทธิ์ไม่ใช่ Anyone
+     */
+    function fetchGasJson(url) {
+      return fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        redirect: 'follow',
+        credentials: 'omit',
+        cache: 'no-store'
+      })
+      .then(function(response) {
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
+        }
+        return response.text();
+      })
+      .then(function(rawText) {
+        try {
+          return JSON.parse(rawText);
+        } catch (parseErr) {
+          throw new Error('ติดหน้าล็อกอิน Google! กรุณาตั้งค่า Deploy ใน Apps Script ช่อง "ผู้ที่มีสิทธิ์เข้าถึง (Who has access)" ให้เป็น "ทุกคน (Anyone)" แล้วกด Deploy เวอร์ชันใหม่ครับ');
+        }
+      });
     }
 
     function showIdleReadyState() {
@@ -277,11 +287,10 @@
         '<div class="state-box">' +
           '<div style="font-size:2.3rem; margin-bottom:8px;">⚡</div>' +
           '<div style="font-family:\'Prompt\',sans-serif; font-weight:700; font-size:1.1rem; color:#0f172a;">พร้อมค้นหาสเปกผ้าเบรกและก้ามเบรก</div>' +
-          '<div style="color:#475569; font-size:0.92rem; margin-top:6px;">พิมพ์รหัสผลิต ชื่อรุ่น ขนาด หรือรหัสก้ามด้านบน (หยุดพิมพ์ 0.6 วินาที ระบบจะดึงข้อมูลให้อัตโนมัติ)</div>' +
+          '<div style="color:#475569; font-size:0.92rem; margin-top:6px;">ค้นหาเฉพาะ 3 ช่องหลัก: <strong>Code_FG</strong>, <strong>ชื่อรุ่นใบสั่งฝนเจาะ</strong> และ <strong>รหัสก้าม</strong></div>' +
           '<div class="example-tags">' +
             '<button type="button" class="example-btn" onclick="quickFillSearch(\'HINO\')">ลองค้น: HINO</button>' +
-            '<button type="button" class="example-btn" onclick="quickFillSearch(\'001\')">ลองค้น: 001</button>' +
-            '<button type="button" class="example-btn" onclick="setStatusFilter(\'รอสอบเทียบ\')">เช็กก้ามรอสอบเทียบ</button>' +
+            '<button type="button" class="example-btn" onclick="quickFillSearch(\'001\')">ลองค้นรหัสก้าม: 001</button>' +
           '</div>' +
         '</div>';
     }
@@ -344,7 +353,6 @@
         query: filterState.query.trim(),
         dept: filterState.dept,
         type: filterState.type,
-        status: filterState.status,
         onlyMissingPhoto: filterState.onlyMissingPhoto,
         forceRefresh: Boolean(forceRefresh)
       };
@@ -363,24 +371,28 @@
         return;
       }
 
-      if (!EXTERNAL_GAS_API_URL) {
-        handleSearchError('หากรันนอก Google Apps Script กรุณาใส่ลิงก์ Web App URL ในตัวแปร EXTERNAL_GAS_API_URL');
-        return;
-      }
-
       const sep = EXTERNAL_GAS_API_URL.indexOf('?') >= 0 ? '&' : '?';
       const url = EXTERNAL_GAS_API_URL + sep + 'action=api' +
         '&q=' + encodeURIComponent(payload.query) +
         '&dept=' + encodeURIComponent(payload.dept) +
         '&type=' + encodeURIComponent(payload.type) +
-        '&status=' + encodeURIComponent(payload.status) +
         (payload.onlyMissingPhoto ? '&missing=1' : '') +
-        (payload.forceRefresh ? '&refresh=1' : '');
+        (payload.forceRefresh ? '&refresh=1' : '') +
+        '&_t=' + Date.now();
 
-      fetch(url)
-        .then(function(r) { return r.json(); })
-        .then(function(res) { if (reqId === latestReqId) handleSearchResponse(res, forceRefresh); })
-        .catch(function(err) { if (reqId === latestReqId) handleSearchError(err.message || 'เชื่อมต่อ JSON API ไม่สำเร็จ'); });
+      fetchGasJson(url)
+        .then(function(res) {
+          if (reqId === latestReqId) handleSearchResponse(res, forceRefresh);
+        })
+        .catch(function(err) {
+          if (reqId === latestReqId) {
+            handleSearchError(
+              err.message === 'Failed to fetch'
+                ? 'เบราว์เซอร์ถูกบล็อกการเข้าถึงลิงก์ Apps Script กรุณาเปิดหน้า Apps Script > Deploy > Manage deployments > กดรูปดินสอ > ตั้งค่า Who has access เป็น "ทุกคน (Anyone)" แล้วกด Deploy ใหม่ครับ'
+                : (err.message || 'เชื่อมต่อ JSON API ไม่สำเร็จ')
+            );
+          }
+        });
     }
 
     function handleForceSyncClick() {
@@ -415,25 +427,20 @@
         return;
       }
 
-      if (!EXTERNAL_GAS_API_URL) {
-        syncBtn.disabled = false;
-        syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
-        showToast('กรุณาตั้งค่า EXTERNAL_GAS_API_URL ก่อนใช้งานนอก GAS');
-        return;
-      }
-
       const sep = EXTERNAL_GAS_API_URL.indexOf('?') >= 0 ? '&' : '?';
-      fetch(EXTERNAL_GAS_API_URL + sep + 'action=sync')
-        .then(function(r) { return r.json(); })
+      fetchGasJson(EXTERNAL_GAS_API_URL + sep + 'action=sync&_t=' + Date.now())
         .then(function(res) {
           syncBtn.disabled = false;
           syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
-          if (res && res.ok && res.meta) showToast(res.meta.cooldownNotice || ('✅ ซิงค์รูปเรียบร้อย (' + res.meta.totalImagesInDrive + ' รูป)'));
+          if (res && res.ok && res.meta) {
+            document.getElementById('syncMetaText').textContent = 'ซิงค์ล่าสุด: ' + res.meta.updatedAt + ' | รูปใน Drive: ' + res.meta.totalImagesInDrive + ' ไฟล์';
+            showToast(res.meta.cooldownNotice || ('✅ ซิงค์รูปเรียบร้อย (' + res.meta.totalImagesInDrive + ' รูป)'));
+          }
         })
-        .catch(function() {
+        .catch(function(err) {
           syncBtn.disabled = false;
           syncBtn.textContent = '🔄 ซิงค์ข้อมูล/รูปใหม่';
-          showToast('⚠️ เชื่อมต่อเพื่อซิงค์ไม่สำเร็จ');
+          showToast('⚠️ ซิงค์ไม่สำเร็จ กรุณาเช็กสิทธิ์ Anyone ใน GAS');
         });
     }
 
@@ -462,15 +469,18 @@
       const truncatedNote = meta.isTruncated ? ' (แสดง 300 รายการแรก กรุณาพิมพ์คำค้นเพิ่มเพื่อเจาะจง)' : '';
       document.getElementById('resultCountText').innerHTML = 'พบผลลัพธ์ตรงเงื่อนไข <strong>' + totalMatched.toLocaleString() + '</strong> รายการ' + truncatedNote;
 
-      const st = res.stats || { active: 0, pending: 0, cancelled: 0, missingImg: 0 };
+      const st = res.stats || { replacedCount: 0, missingImg: 0 };
       const statsBar = document.getElementById('matchedStatsBar');
-      if (totalMatched > 0) {
+      if (totalMatched > 0 && (st.replacedCount > 0 || st.missingImg > 0)) {
         statsBar.style.display = 'flex';
-        statsBar.innerHTML =
-          '<span class="stat-pill" style="color:#166534; background:#f0fdf4; border-color:#bbf7d0;">✅ ใช้งาน: ' + st.active + '</span>' +
-          '<span class="stat-pill" style="color:#92400e; background:#fffbeb; border-color:#fde68a;">⚠️ รอสอบเทียบ: ' + st.pending + '</span>' +
-          '<span class="stat-pill" style="color:#991b1b; background:#fef2f2; border-color:#fecaca;">🚨 ยกเลิก: ' + st.cancelled + '</span>' +
-          '<span class="stat-pill" style="color:#475569;">🖼️ ขาดรูป: ' + st.missingImg + '</span>';
+        let pillsHtml = '';
+        if (st.replacedCount > 0) {
+          pillsHtml += '<span class="stat-pill" style="color:#3730a3; background:#eef2ff; border-color:#c7d2fe;">🔄 มีการแทนรหัสก้ามใหม่: ' + st.replacedCount + ' รายการ</span>';
+        }
+        if (st.missingImg > 0) {
+          pillsHtml += '<span class="stat-pill" style="color:#92400e; background:#fffbeb; border-color:#fde68a;">🖼️ ขาดรูปก้าม: ' + st.missingImg + ' รายการ</span>';
+        }
+        statsBar.innerHTML = pillsHtml;
       } else {
         statsBar.style.display = 'none';
       }
@@ -483,7 +493,7 @@
       if (currentItems.length === 0) {
         document.getElementById('statusContainer').innerHTML =
           '<div class="state-box"><div style="font-size:2rem; margin-bottom:8px;">🔎</div>' +
-          '<div style="font-weight:700; font-size:1.05rem;">ไม่พบรายการสเปกที่ตรงกับคำค้นหานี้</div>' +
+          '<div style="font-weight:700; font-size:1.05rem;">ไม่พบรายการที่ตรงกับ Code_FG, รุ่นใบสั่งฝนเจาะ หรือ รหัสก้ามนี้</div>' +
           '<div style="color:#64748b; font-size:0.9rem; margin-top:4px;">ลองตรวจสอบตัวสะกด หรือกดปุ่ม "ล้างคำค้นหาและตัวกรอง"</div></div>';
         document.getElementById('loadMoreWrap').style.display = 'none';
         return;
@@ -521,12 +531,6 @@
       triggerAfterChipChange();
     }
 
-    function setStatusFilter(val) {
-      filterState.status = val;
-      document.querySelectorAll('[data-status]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-status') === val); });
-      triggerAfterChipChange();
-    }
-
     function toggleMissingPhotoFilter() {
       filterState.onlyMissingPhoto = !filterState.onlyMissingPhoto;
       document.getElementById('btnMissingPhoto').classList.toggle('active', filterState.onlyMissingPhoto);
@@ -550,12 +554,10 @@
       filterState.query = '';
       filterState.dept = 'ALL';
       filterState.type = 'ALL';
-      filterState.status = 'ALL';
       filterState.onlyMissingPhoto = false;
       document.getElementById('btnMissingPhoto').classList.remove('active');
       document.querySelectorAll('[data-dept]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-dept') === 'ALL'); });
       document.querySelectorAll('[data-type]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-type') === 'ALL'); });
-      document.querySelectorAll('[data-status]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-status') === 'ALL'); });
       showIdleReadyState();
     }
 
@@ -578,20 +580,16 @@
     }
 
     function buildCardHtml(item) {
-      const st = item.caliperStatus;
-      let badgeHtml = '', alertBannerHtml = '', cardExtraClass = '';
+      let replacedBadgeHtml = '';
+      let replaceNoticeHtml = '';
 
-      if (st === 'ใช้งาน') {
-        badgeHtml = '<span class="status-badge status-active">✅ ใช้งาน</span>';
-      } else if (st === 'รอสอบเทียบ') {
-        badgeHtml = '<span class="status-badge status-pending">⚠️ รอสอบเทียบ</span>';
-        alertBannerHtml = '<div class="alert-banner alert-pending">⚠️ คำเตือน: ก้ามเบรกนี้อยู่ระหว่างรอสอบเทียบ โปรดตรวจสอบความถูกต้องก่อนใช้งาน</div>';
-      } else if (st === 'ยกเลิกใช้งาน') {
-        badgeHtml = '<span class="status-badge status-cancelled">🚨 ยกเลิกใช้งาน</span>';
-        alertBannerHtml = '<div class="alert-banner alert-cancelled">⛔ ห้ามนำมาใช้งานเด็ดขาด! ก้ามเบรกนี้ถูกยกเลิกการใช้งานแล้ว</div>';
-        cardExtraClass = ' card-cancelled';
-      } else {
-        badgeHtml = '<span class="status-badge status-unknown">' + escapeHtml(st) + '</span>';
+      if (item.isReplaced && item.replacements && item.replacements.length > 0) {
+        replacedBadgeHtml = '<span class="replaced-badge">🔄 แทนรหัสก้ามใหม่</span>';
+        const lines = item.replacements.map(function(r) {
+          const noteTxt = r.note ? ' (' + escapeHtml(r.note) + ')' : '';
+          return '🔄 เปลี่ยนใช้ก้าม <strong>' + escapeHtml(r.to) + '</strong> แทนรหัสเดิม <s>' + escapeHtml(r.from) + '</s>' + noteTxt;
+        });
+        replaceNoticeHtml = '<div class="replace-notice-box">' + lines.join('<br>') + '</div>';
       }
 
       let calipersHtml = '';
@@ -627,7 +625,7 @@
       }
 
       return (
-        '<article class="spec-card' + cardExtraClass + '">' +
+        '<article class="spec-card">' +
           '<div class="zone-pad">' +
             '<div class="zone-header-bar">' +
               '<span class="code-fg-badge">' + escapeHtml(item.codeFG) + '</span>' +
@@ -647,9 +645,9 @@
             '<div>' +
               '<div class="zone-caliper-top">' +
                 '<span class="zone-tag">🛠️ ก้ามเบรกสำหรับเทียบโค้ง</span>' +
-                badgeHtml +
+                replacedBadgeHtml +
               '</div>' +
-              alertBannerHtml +
+              replaceNoticeHtml +
               '<div class="caliper-code-hero">' + escapeHtml(item.caliperCodeRaw) + '</div>' +
               '<div class="caliper-meta-grid">' +
                 '<div class="meta-item"><strong>ชื่อรุ่นก้าม</strong><span>' + escapeHtml(item.caliperModel) + '</span></div>' +
@@ -682,6 +680,7 @@
       const item = currentItems[itemIdx];
       if (!item) return;
 
+      const repLine = item.isReplaced ? ' (แทนรหัสเดิม: ' + item.originalCaliperCode + ')' : '';
       const text = [
         '🔧 [สเปกผ้าเบรก & ก้ามเทียบโค้ง]',
         '• Code_FG: ' + item.codeFG,
@@ -690,7 +689,7 @@
         '• ขนาด: ' + item.size,
         '• สเปกเจาะ: เกรด ' + item.grade + ' | ' + item.holeCount + ' รู | ดอกเจาะ ' + item.drillBitNo + ' | ดอกคว้าน ' + item.countersinkNo,
         '--------------------',
-        '• รหัสก้าม: ' + item.caliperCodeRaw + ' (' + item.caliperStatus + ')',
+        '• รหัสก้าม: ' + item.caliperCodeRaw + repLine,
         '• รุ่นก้าม: ' + item.caliperModel + ' | รัศมีโค้ง: ' + item.caliperRadius,
         '• ช่วงการวัด: ' + item.measureRange,
         '• ประเภท: ' + item.caliperType + ' | หน่วยงาน: ' + item.department
@@ -760,7 +759,7 @@
       const cal = modalItemRef.calipers[modalCaliperIdx];
       const imgEl = document.getElementById('modalImg');
 
-      document.getElementById('modalCaliperTitle').textContent = 'รหัสก้าม: ' + cal.code + ' (' + modalItemRef.caliperStatus + ')';
+      document.getElementById('modalCaliperTitle').textContent = 'รหัสก้าม: ' + cal.code;
       document.getElementById('modalCaliperSub').textContent = modalItemRef.caliperModel + ' | รัศมีโค้ง: ' + modalItemRef.caliperRadius + ' | ช่วงวัด: ' + modalItemRef.measureRange;
 
       resetModalTransform();
